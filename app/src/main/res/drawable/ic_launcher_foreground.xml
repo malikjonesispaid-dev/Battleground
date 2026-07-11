@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- outer HUD ring, dashed feel via short arcs -->
+    <path
+        android:pathData="M54,54m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0"
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="2.4"
+        android:strokeAlpha="0.55"
+        android:fillColor="#00000000" />
+
+    <!-- middle ring -->
+    <path
+        android:pathData="M54,54m-21,0a21,21 0,1 1,42 0a21,21 0,1 1,-42 0"
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="2.6"
+        android:fillColor="#00000000" />
+
+    <!-- crosshair ticks -->
+    <path
+        android:pathData="M54,15 L54,23 M54,85 L54,93 M15,54 L23,54 M85,54 L93,54"
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="2.4"
+        android:fillColor="#00000000" />
+
+    <!-- core glow -->
+    <path
+        android:pathData="M54,54m-13,0a13,13 0,1 1,26 0a13,13 0,1 1,-26 0"
+        android:fillColor="#1AC8FF"
+        android:fillAlpha="0.35" />
+
+    <!-- core -->
+    <path
+        android:pathData="M54,54m-7,0a7,7 0,1 1,14 0a7,7 0,1 1,-14 0"
+        android:fillColor="#E8FEFF" />
+</vector>
