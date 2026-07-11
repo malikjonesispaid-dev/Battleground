@@ -56,7 +56,7 @@ fun ChatLog(
 
 @Composable
 private fun ChatBubble(message: ChatMessage) {
-    val alignment = if (message.isUser) Alignment.End else Alignment.Start
+    val alignment = if (message.isUser) Alignment.CenterEnd else Alignment.CenterStart
     val accent = if (message.isUser) JarvisTextDim else JarvisCyan
     val label = if (message.isUser) "YOU" else "JARVIS"
 
