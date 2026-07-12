@@ -27,6 +27,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build debug APK
+        env:
+          JARVIS_PROXY_BASE_URL: ${{ secrets.JARVIS_PROXY_BASE_URL }}
+          JARVIS_PROXY_SHARED_SECRET: ${{ secrets.JARVIS_PROXY_SHARED_SECRET }}
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK artifact

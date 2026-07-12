@@ -1,7 +1,24 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
+
+// Optional default for the shared proxy server (see /server) so debug/CI
+// builds can ship pre-configured without anyone editing app code. Never
+// commit real values here — set them in a local (gitignored) local.properties
+// for local builds, or as repo secrets JARVIS_PROXY_BASE_URL /
+// JARVIS_PROXY_SHARED_SECRET for CI builds. Falls back to empty, in which
+// case the app just asks the user to configure a server or bring their own
+// key in Settings.
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
+fun proxyConfigValue(propertyKey: String, envKey: String): String =
+    localProperties.getProperty(propertyKey) ?: System.getenv(envKey) ?: ""
 
 android {
     namespace = "com.jarvis.ai"
@@ -13,6 +30,17 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+
+        buildConfigField(
+            "String",
+            "DEFAULT_PROXY_BASE_URL",
+            "\"${proxyConfigValue("jarvisProxyBaseUrl", "JARVIS_PROXY_BASE_URL")}\""
+        )
+        buildConfigField(
+            "String",
+            "DEFAULT_PROXY_SHARED_SECRET",
+            "\"${proxyConfigValue("jarvisProxySharedSecret", "JARVIS_PROXY_SHARED_SECRET")}\""
+        )
 
         vectorDrawables {
             useSupportLibrary = true
@@ -44,6 +72,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {

@@ -151,15 +151,21 @@ class JarvisViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         val apiKey = prefs.apiKey
-        if (apiKey.isNullOrBlank()) {
-            respond("I don't have an API key configured yet. Add one in Settings to unlock full conversation.")
+        val proxyBaseUrl = prefs.proxyBaseUrl
+        val endpoint = when {
+            !apiKey.isNullOrBlank() -> AiRepository.Endpoint.Direct(apiKey)
+            !proxyBaseUrl.isNullOrBlank() -> AiRepository.Endpoint.Proxy(proxyBaseUrl, prefs.proxySharedSecret)
+            else -> null
+        }
+        if (endpoint == null) {
+            respond("I don't have a server or API key configured yet. Add one in Settings to unlock full conversation.")
             return
         }
 
         viewModelScope.launch {
             val history = messages.takeLast(12).map { AiRepository.Turn(it.text, it.isUser) }
             when (val result = aiRepository.sendMessage(
-                apiKey = apiKey,
+                endpoint = endpoint,
                 model = selectedModel,
                 systemPrompt = JARVIS_SYSTEM_PROMPT,
                 history = history

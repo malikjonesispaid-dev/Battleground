@@ -12,12 +12,19 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 /**
- * Talks to the Anthropic Messages API directly over HTTPS from the device,
- * using the user's own API key. A dedicated JVM SDK is unnecessary for a
- * single non-streaming chat completion and would meaningfully bloat the APK,
- * so this is a deliberately thin OkHttp client rather than a full SDK.
+ * Talks to Claude over HTTPS from the device, either directly to Anthropic
+ * using the user's own API key, or through a self-hosted proxy (see
+ * `server/`) that holds the key server-side so most users need no key at
+ * all. A dedicated JVM SDK is unnecessary for a single non-streaming chat
+ * completion and would meaningfully bloat the APK, so this is a deliberately
+ * thin OkHttp client rather than a full SDK.
  */
 class AiRepository {
+
+    sealed class Endpoint {
+        data class Direct(val apiKey: String) : Endpoint()
+        data class Proxy(val baseUrl: String, val sharedSecret: String?) : Endpoint()
+    }
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -34,7 +41,7 @@ class AiRepository {
     }
 
     suspend fun sendMessage(
-        apiKey: String,
+        endpoint: Endpoint,
         model: String,
         systemPrompt: String,
         history: List<Turn>
@@ -55,10 +62,22 @@ class AiRepository {
                 .put("system", systemPrompt)
                 .put("messages", messages)
 
-            val request = Request.Builder()
-                .url("https://api.anthropic.com/v1/messages")
-                .addHeader("x-api-key", apiKey)
-                .addHeader("anthropic-version", "2023-06-01")
+            val requestBuilder = when (endpoint) {
+                is Endpoint.Direct -> Request.Builder()
+                    .url("https://api.anthropic.com/v1/messages")
+                    .addHeader("x-api-key", endpoint.apiKey)
+                    .addHeader("anthropic-version", "2023-06-01")
+
+                is Endpoint.Proxy -> Request.Builder()
+                    .url(endpoint.baseUrl.trimEnd('/') + "/v1/chat")
+                    .apply {
+                        if (!endpoint.sharedSecret.isNullOrBlank()) {
+                            addHeader("x-proxy-secret", endpoint.sharedSecret)
+                        }
+                    }
+            }
+
+            val request = requestBuilder
                 .addHeader("content-type", "application/json")
                 .post(body.toString().toRequestBody(jsonMedia))
                 .build()

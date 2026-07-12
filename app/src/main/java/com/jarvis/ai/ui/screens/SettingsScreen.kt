@@ -49,6 +49,8 @@ fun SettingsScreen(
     val prefs = remember { SecurePrefs(context) }
 
     var apiKey by remember { mutableStateOf(prefs.apiKey.orEmpty()) }
+    var proxyBaseUrl by remember { mutableStateOf(prefs.proxyBaseUrl.orEmpty()) }
+    var proxySharedSecret by remember { mutableStateOf(prefs.proxySharedSecret.orEmpty()) }
     var voiceEnabled by remember { mutableStateOf(prefs.voiceEnabled) }
     var saved by remember { mutableStateOf(false) }
 
@@ -69,10 +71,46 @@ fun SettingsScreen(
             modifier = Modifier.padding(top = 24.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            SectionLabel("ANTHROPIC API KEY")
+            SectionLabel("SERVER")
             Text(
-                "Your key is encrypted on-device and only ever sent directly to " +
-                    "api.anthropic.com. Without a key, offline commands still work.",
+                "Full conversation works out of the box through a shared assistant " +
+                    "server. Only change this if you're running your own (see server/ " +
+                    "in the repo). Leave the secret blank if the server doesn't require one.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = JarvisTextDim
+            )
+            OutlinedTextField(
+                value = proxyBaseUrl,
+                onValueChange = { proxyBaseUrl = it; saved = false },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("https://your-proxy.example.com") },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = JarvisCyan,
+                    unfocusedBorderColor = JarvisTextDim,
+                    cursorColor = JarvisCyan
+                )
+            )
+            OutlinedTextField(
+                value = proxySharedSecret,
+                onValueChange = { proxySharedSecret = it; saved = false },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("server secret (optional)") },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = JarvisCyan,
+                    unfocusedBorderColor = JarvisTextDim,
+                    cursorColor = JarvisCyan
+                )
+            )
+
+            SectionLabel("ANTHROPIC API KEY (ADVANCED)")
+            Text(
+                "Optional: paste your own Anthropic key to bypass the shared server " +
+                    "and talk to api.anthropic.com directly. Encrypted on-device and " +
+                    "sent nowhere else. Without a key or server, offline commands still work.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = JarvisTextDim
             )
@@ -126,6 +164,8 @@ fun SettingsScreen(
             Button(
                 onClick = {
                     prefs.apiKey = apiKey.trim().ifBlank { null }
+                    prefs.proxyBaseUrl = proxyBaseUrl.trim().ifBlank { null }
+                    prefs.proxySharedSecret = proxySharedSecret.trim().ifBlank { null }
                     prefs.voiceEnabled = voiceEnabled
                     saved = true
                 },
