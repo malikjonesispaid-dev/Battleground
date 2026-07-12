@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.PocketPentestKit">
+
+        <activity
+            android:name=".core.DisclaimerActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".MainActivity" android:exported="false" />
+
+        <activity
+            android:name=".scanner.NetworkScanActivity"
+            android:exported="false"
+            android:label="@string/tool_network_scanner" />
+
+        <activity
+            android:name=".password.PasswordAuditActivity"
+            android:exported="false"
+            android:label="@string/tool_password_auditor" />
+
+        <activity
+            android:name=".sqli.SqliTesterActivity"
+            android:exported="false"
+            android:label="@string/tool_sqli_tester" />
+
+    </application>
+</manifest>
