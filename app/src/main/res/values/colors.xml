@@ -1,0 +1,10 @@
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="primary">#FF1B5E20</color>
+    <color name="primary_dark">#FF0D3311</color>
+    <color name="accent">#FF00C853</color>
+    <color name="danger">#FFD32F2F</color>
+    <color name="background">#FF121212</color>
+    <color name="surface">#FF1E1E1E</color>
+</resources>

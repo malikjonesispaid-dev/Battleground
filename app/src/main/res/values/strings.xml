@@ -1,0 +1,50 @@
+<resources>
+    <string name="app_name">Pocket Pentest Kit</string>
+
+    <string name="tool_network_scanner">Network Scanner</string>
+    <string name="tool_password_auditor">Password Auditor</string>
+    <string name="tool_sqli_tester">SQLi Tester</string>
+
+    <string name="disclaimer_title">Authorized Use Only</string>
+    <string name="disclaimer_body">
+        This app performs active security testing: network scanning, credential
+        brute-forcing, and SQL injection probing.\n\n
+        Only point these tools at systems you own outright, or systems for which
+        you hold explicit, documented, written authorization to test.\n\n
+        Running these tools against networks, servers, accounts, or applications
+        you do not own or are not authorized to test is illegal in most
+        jurisdictions (e.g. the U.S. Computer Fraud and Abuse Act and equivalent
+        laws elsewhere) and can carry criminal penalties.\n\n
+        By continuing, you confirm that every target you scan with this app is
+        one you own or are explicitly authorized in writing to test, and that
+        you take full responsibility for how you use it.
+    </string>
+    <string name="disclaimer_checkbox">I confirm I will only target systems I own or am explicitly authorized to test</string>
+    <string name="disclaimer_agree">I Agree — Continue</string>
+    <string name="disclaimer_exit">Decline and Exit</string>
+
+    <string name="authorization_prompt">I own this target or hold written authorization to test it</string>
+
+    <string name="hint_target">Target (IP, CIDR, or hostname)</string>
+    <string name="hint_ports">Ports (comma-separated, e.g. 22,80,443)</string>
+    <string name="action_scan">Scan</string>
+    <string name="action_stop">Stop</string>
+
+    <string name="tab_hash_cracker">Hash Cracker</string>
+    <string name="tab_login_bruteforce">Login Brute Force</string>
+
+    <string name="hint_hash">Hash value</string>
+    <string name="hint_wordlist_path">Custom wordlist file (optional)</string>
+    <string name="action_crack">Start Cracking</string>
+
+    <string name="hint_login_url">Login URL (https://your-app.example/login)</string>
+    <string name="hint_username_field">Username field name</string>
+    <string name="hint_username_value">Username value to test</string>
+    <string name="hint_password_field">Password field name</string>
+    <string name="hint_failure_marker">Text present ONLY on failed login (e.g. "Invalid password")</string>
+    <string name="hint_delay_ms">Delay between attempts (ms)</string>
+    <string name="action_start_bruteforce">Start Brute Force</string>
+
+    <string name="hint_sqli_url">Target URL with query string (e.g. https://your-app.example/item?id=1)</string>
+    <string name="action_run_sqli">Run SQLi Tests</string>
+</resources>
