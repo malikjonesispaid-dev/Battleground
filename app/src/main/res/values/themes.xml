@@ -1,0 +1,6 @@
+<resources>
+    <style name="Theme.SniperAsm" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/sniper_black</item>
+        <item name="android:windowBackground">@color/sniper_white</item>
+    </style>
+</resources>

@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">SniperASM</string>
+    <string name="disclaimer_title">Authorized Use Only</string>
+    <string name="disclaimer_body">SniperASM is a network reconnaissance and attack-surface-management
+        tool. Only scan systems and networks that you own or are explicitly authorized to test.
+        Scanning systems without authorization may violate the Computer Fraud and Abuse Act,
+        the UK Computer Misuse Act, or similar laws in your jurisdiction, and may be a criminal
+        offense. By continuing you confirm you have permission to scan every target you enter.</string>
+    <string name="disclaimer_accept">I understand and agree</string>
+</resources>
