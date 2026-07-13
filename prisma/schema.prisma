@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Platform {
+  INSTAGRAM
+  FACEBOOK
+  TIKTOK
+  YOUTUBE
+  WEBHOOK
+}
+
+enum TargetStatus {
+  PENDING
+  SCHEDULED
+  PUBLISHING
+  PUBLISHED
+  DRY_RUN
+  FAILED
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  pages     Page[]
+}
+
+model Page {
+  id          String       @id @default(cuid())
+  client      Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId    String
+  platform    Platform
+  displayName String
+  // Platform account/page identifier (e.g. IG Business Account ID, YouTube Channel ID).
+  externalId  String?
+  // OAuth/API access token for this page. Stored locally only — see README for
+  // production guidance (secret manager / encryption at rest).
+  accessToken String?
+  // For the WEBHOOK connector: any URL that accepts a POST with the generated content
+  // (e.g. Zapier/Make/Buffer inbound webhook), for platforms without a direct connector.
+  webhookUrl  String?
+  createdAt   DateTime     @default(now())
+  targets     PostTarget[]
+}
+
+model Post {
+  id          String       @id @default(cuid())
+  idea        String
+  hook        String
+  caption     String
+  hashtags    String
+  // Optional image/video URL. Required by Instagram, TikTok, and YouTube
+  // connectors (none of them accept text-only posts); Facebook and the
+  // generic webhook connector work without it.
+  mediaUrl    String?
+  scheduledAt DateTime?
+  createdAt   DateTime     @default(now())
+  targets     PostTarget[]
+}
+
+model PostTarget {
+  id            String       @id @default(cuid())
+  post          Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId        String
+  page          Page         @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  pageId        String
+  status        TargetStatus @default(PENDING)
+  externalPostId String?
+  error         String?
+  publishedAt   DateTime?
+
+  @@unique([postId, pageId])
+}
