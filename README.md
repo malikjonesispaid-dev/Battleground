@@ -1,40 +1,38 @@
-# Voice Studio
+# J.A.R.V.I.S. for Android
 
-A browser-based, AI-assisted music studio: write your own lyrics, generate a beat, record vocals over it, and master the final track — no installs, no server, no external API keys required.
+A futuristic, HUD-styled voice assistant for Android built with Kotlin and Jetpack Compose — an animated arc-reactor core, radar-sweep background, voice input/output, and a Claude-powered brain.
 
 ## Features
 
-- **AI Beat Engine** (`src/lib/beatgen`) — a real generative composer, not a static sample library. Picks a chord progression, builds genre-appropriate drum patterns, a bassline, and (for some genres) a synth hook, then renders it with Tone.js instruments. Same genre/BPM/key/seed always reproduces the same beat, so a project only needs to store the tiny spec, not the audio, to be reopened later. You can also upload your own beat file instead.
-- **Multitrack vocal recording** (`src/lib/audio`) — records from the mic with a light cleanup chain (high-pass + noise gate), lets you stack unlimited takes over the beat, and mix each with gain/pan/mute/solo/reverb send.
-- **AI Pitch Assist** — optional per-track pitch correction that detects each vocal frame's pitch and nudges it toward the beat's key/scale, blended by strength.
-- **AI Mastering Chain** (`src/lib/mastering`) — auto EQ, saturation/warmth, dual-band "glue" compression, mid/side stereo widening, LUFS-targeted auto-gain (two-pass: analyze, then apply), and a limiter. Five starting presets, fully adjustable.
-- **Lyrics + teleprompter** — write bars, then switch to a large-text auto-scrolling view paced to the track length.
-- **Local persistence** — projects (including recorded takes and uploaded beats) are saved to IndexedDB in the browser; nothing is uploaded anywhere.
-- **WAV export** — export the mastered master or the raw unmastered mix.
+- Animated sci-fi HUD: pulsing reactor core, radar sweep, HUD grid, state-reactive glow (idle / listening / thinking / speaking)
+- Voice in (`SpeechRecognizer`) and voice out (`TextToSpeech`)
+- Offline commands that work with no setup at all: time, date, battery, flashlight, camera, web search, system diagnostics
+- Claude-powered open-ended conversation through a shared backend proxy (see [`server/`](server/)) — no per-user API key needed, choose Opus, Sonnet, or Haiku in Settings
+- Advanced option: paste your own Anthropic API key in Settings to bypass the shared server and talk to `api.anthropic.com` directly. Stored with `EncryptedSharedPreferences` (Android Keystore-backed), never leaves the device except directly to Anthropic
 
-Everything runs client-side via the Web Audio API. There's no backend, no accounts, and no telemetry.
+## Getting the APK
 
-## Getting started
+This repo builds automatically via GitHub Actions on every push (`.github/workflows/build-apk.yml`). After a push:
 
-```bash
-npm install
-npm run dev
-```
+1. Open the **Actions** tab → the latest **Build Jarvis APK** run.
+2. Download the `jarvis-debug-apk` artifact.
+3. Unzip it and install `app-debug.apk` on your device (enable "install from unknown sources" for your file manager / browser).
 
-Open [http://localhost:3000](http://localhost:3000), then click **Open Studio**. Recording requires microphone permission and a user gesture (click) before audio can start, per browser autoplay rules.
+## Building locally
 
-## Project structure
+Requires Android Studio (or the Android SDK + JDK 17):
 
 ```
-src/lib/audio/       recording, playback engine, mixdown, WAV encode, pitch correction
-src/lib/beatgen/      music theory, drum pattern generator, beat composer, Tone.js renderer
-src/lib/mastering/    mastering DSP chain, loudness analysis, presets
-src/lib/storage/      IndexedDB project + audio blob persistence
-src/store/            zustand store for studio state
-src/hooks/            useStudioEngine - wires store + audio engine + storage together
-src/components/studio/ UI: beat library, track list, lyrics/teleprompter, mastering panel, transport
+./gradlew assembleDebug
 ```
 
-## Extending with external AI services
+## Backend proxy (`server/`)
 
-The beat engine and mastering chain are fully self-contained (no API keys needed) so the app works offline out of the box. If you want to swap in a hosted generative-music model (e.g. for more varied/realistic instrumentals) or a cloud mastering API, the natural integration points are `src/hooks/useStudioEngine.ts`'s `generateBeat`/`runMastering` — swap the local call for a `fetch` to your provider and decode the returned audio the same way `uploadBeat` does.
+The app talks to a small proxy server that holds one Anthropic API key server-side, so the APK itself never contains a key and no user has to bring one. See [`server/README.md`](server/README.md) to deploy your own instance. Once deployed, either:
+
+- bake the URL (and optional shared secret) into CI builds via the `JARVIS_PROXY_BASE_URL` / `JARVIS_PROXY_SHARED_SECRET` repo secrets used by `.github/workflows/build-apk.yml`, or
+- open the app → Settings (gear icon) → paste the server URL/secret manually.
+
+## Bring your own key (advanced, optional)
+
+Open the app → Settings (gear icon) → paste an Anthropic API key from console.anthropic.com under "Anthropic API Key (Advanced)". This bypasses the shared server entirely and talks to Anthropic directly from the device. Without a key or a server configured, the offline commands above still work.
