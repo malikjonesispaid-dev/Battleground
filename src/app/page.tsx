@@ -30,7 +30,7 @@ export default function Home() {
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-6">
         <div className="flex items-center gap-2 font-semibold">
           <Mic2 className="text-fuchsia-400" size={22} />
-          Voice Studio
+          Gordo Loops
         </div>
         <Link
           href="/studio"

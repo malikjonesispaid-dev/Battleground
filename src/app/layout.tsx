@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Voice Studio — AI-powered music studio",
+  title: "Gordo Loops — AI-powered music studio",
   description:
     "Write your own lyrics, generate AI beats, record vocals, and master the final track — all in your browser.",
 };

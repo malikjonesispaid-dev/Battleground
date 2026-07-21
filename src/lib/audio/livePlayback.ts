@@ -1,4 +1,6 @@
 import { getAudioContext } from "./context";
+import { buildVoiceEffectChain, getPlaybackRateForEffect } from "./voiceEffects";
+import type { VoiceEffectId } from "@/lib/types";
 
 export interface PlaybackTrackInput {
   id: string;
@@ -8,6 +10,7 @@ export interface PlaybackTrackInput {
   pan: number;
   muted: boolean;
   solo: boolean;
+  voiceEffect?: VoiceEffectId;
 }
 
 export interface PlaybackInput {
@@ -60,13 +63,17 @@ class PlaybackEngine {
       const relativeStart = track.offset - input.startAt;
       if (relativeStart < 0 && -relativeStart >= track.buffer.duration) continue;
 
+      const effect = track.voiceEffect ?? "none";
       const source = ctx.createBufferSource();
       source.buffer = track.buffer;
+      source.playbackRate.value = getPlaybackRateForEffect(effect);
       const gain = ctx.createGain();
       gain.gain.value = track.gain;
       const pan = ctx.createStereoPanner();
       pan.pan.value = track.pan;
-      source.connect(gain).connect(pan).connect(ctx.destination);
+      const effectChain = buildVoiceEffectChain(ctx, effect);
+      source.connect(effectChain.input);
+      effectChain.output.connect(gain).connect(pan).connect(ctx.destination);
 
       if (relativeStart >= 0) {
         source.start(now + relativeStart);
