@@ -4,7 +4,8 @@ import { useStudioEngine } from "@/hooks/useStudioEngine";
 import { ProjectBar } from "@/components/studio/ProjectBar";
 import { Transport } from "@/components/studio/Transport";
 import { BeatLibrary } from "@/components/studio/BeatLibrary";
-import { TrackList } from "@/components/studio/TrackList";
+import { Timeline } from "@/components/studio/Timeline";
+import { ActiveTrackControls } from "@/components/studio/ActiveTrackControls";
 import { LyricsTeleprompter } from "@/components/studio/LyricsTeleprompter";
 import { MasteringPanel } from "@/components/studio/MasteringPanel";
 import { BeatEditor } from "@/components/studio/BeatEditor";
@@ -104,22 +105,32 @@ export default function StudioPage() {
           onSetMelodicMute={engine.setBeatMelodicMute}
         />
 
-        <TrackList
+        <Timeline
+          beatBuffer={engine.beatBuffer}
+          beatSpec={engine.beatSpec}
           tracks={engine.tracks}
           trackBuffers={engine.trackBuffers}
           activeTrackId={engine.activeTrackId}
           currentTime={engine.currentTime}
-          isPlaying={engine.isPlaying}
+          totalDuration={totalDuration}
+          onSeek={engine.seek}
+          onSelectTrack={engine.setActiveTrackId}
+          onUpdateTrack={engine.updateTrack}
+          onRemoveTrack={engine.removeTrack}
+        />
+
+        <ActiveTrackControls
+          track={engine.tracks.find((t) => t.id === engine.activeTrackId) ?? null}
           onUpdate={engine.updateTrack}
-          onRemove={engine.removeTrack}
-          onSelect={engine.setActiveTrackId}
         />
 
         <VocalEditorHub
           tracks={engine.tracks}
+          trackBuffers={engine.trackBuffers}
           activeTrackId={engine.activeTrackId}
           onUpdateTrack={engine.updateTrack}
           onDropSoundFx={engine.dropSoundFx}
+          onAddTrack={engine.addTrackWithLimit}
         />
 
         <MasteringPanel

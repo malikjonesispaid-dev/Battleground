@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { VOICE_EFFECT_IDS, VOICE_EFFECT_LABELS } from "@/lib/audio/voiceEffects";
 import { SOUND_FX_IDS, SOUND_FX_LABELS, getSoundFxBuffer, type SoundFxId } from "@/lib/audio/soundboard";
 import { getAudioContext } from "@/lib/audio/context";
+import { VoiceCloningPanel } from "@/components/studio/VoiceCloningPanel";
 import type { VocalTrack, VoiceEffectId } from "@/lib/types";
 import { MAX_TRACKS } from "@/lib/constants";
 import { Mic2, Sparkles, Play } from "lucide-react";
@@ -22,14 +23,18 @@ function previewSoundFx(id: SoundFxId) {
 
 export function VocalEditorHub({
   tracks,
+  trackBuffers,
   activeTrackId,
   onUpdateTrack,
   onDropSoundFx,
+  onAddTrack,
 }: {
   tracks: VocalTrack[];
+  trackBuffers: Record<string, AudioBuffer>;
   activeTrackId: string | null;
   onUpdateTrack: (id: string, patch: Partial<VocalTrack>) => void;
   onDropSoundFx: (fxId: SoundFxId, label: string) => void;
+  onAddTrack: (track: VocalTrack, buffer: AudioBuffer) => boolean;
 }) {
   const [previewing, setPreviewing] = useState<SoundFxId | null>(null);
   const activeTrack = tracks.find((t) => t.id === activeTrackId) ?? null;
@@ -110,6 +115,13 @@ export function VocalEditorHub({
           {atLimit && <p className="mt-2 text-xs text-neutral-500">Track limit reached ({MAX_TRACKS}).</p>}
         </div>
       </div>
+
+      <VoiceCloningPanel
+        tracks={tracks}
+        trackBuffers={trackBuffers}
+        activeTrackId={activeTrackId}
+        onAddTrack={onAddTrack}
+      />
     </Panel>
   );
 }

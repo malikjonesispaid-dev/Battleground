@@ -270,12 +270,21 @@ export function useStudioEngine() {
     [state, rerenderEditedBeat],
   );
 
+  /** Adds a track if under the cap; returns false (and sets an error) if the cap is reached. */
+  const addTrackWithLimit = useCallback(
+    (track: VocalTrack, buffer: AudioBuffer): boolean => {
+      if (state.tracks.length >= MAX_TRACKS) {
+        setError(`You've hit the ${MAX_TRACKS}-track limit. Delete a track to add another.`);
+        return false;
+      }
+      state.addTrack(track, buffer);
+      return true;
+    },
+    [state],
+  );
+
   const dropSoundFx = useCallback(
     async (fxId: SoundFxId, label: string) => {
-      if (state.tracks.length >= MAX_TRACKS) {
-        setError(`You've hit the ${MAX_TRACKS}-track limit. Delete a track to drop in another sound.`);
-        return;
-      }
       try {
         const buffer = await getSoundFxBuffer(fxId);
         const track: VocalTrack = {
@@ -293,12 +302,12 @@ export function useStudioEngine() {
           kind: "fx",
           voiceEffect: "none",
         };
-        state.addTrack(track, buffer);
+        addTrackWithLimit(track, buffer);
       } catch (e) {
         reportError("Couldn't drop in that sound", e);
       }
     },
-    [state, currentTime, reportError],
+    [currentTime, reportError, addTrackWithLimit],
   );
 
   const runMastering = useCallback(async () => {
@@ -470,6 +479,7 @@ export function useStudioEngine() {
     toggleBeatDrumStep,
     setBeatMelodicMute,
     dropSoundFx,
+    addTrackWithLimit,
     runMastering,
     exportMastered,
     exportRawMix,
