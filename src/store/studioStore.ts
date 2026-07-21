@@ -1,11 +1,22 @@
 import { create } from "zustand";
-import type { BeatSpec, LyricLine, MasteringSettings, StudioProject, VocalTrack } from "@/lib/types";
+import type { BeatEdits, BeatSpec, LyricLine, MasteringSettings, StudioProject, VocalTrack } from "@/lib/types";
 import { defaultMasteringSettings } from "@/lib/mastering/presets";
 
 export interface MasterResultMeta {
   measuredLufsBefore: number;
   appliedGainDb: number;
   renderedAt: number;
+}
+
+/** Fills in fields that may be missing from projects saved before they existed. */
+function normalizeTrack(
+  track: Omit<VocalTrack, "kind" | "voiceEffect"> & Partial<Pick<VocalTrack, "kind" | "voiceEffect">>,
+): VocalTrack {
+  return {
+    kind: "vocal",
+    voiceEffect: "none",
+    ...track,
+  };
 }
 
 interface StudioState {
@@ -17,6 +28,7 @@ interface StudioState {
   beatBuffer: AudioBuffer | null;
   beatBlobKey: string | null;
   beatGain: number;
+  beatEdits: BeatEdits | null;
   recentBeats: { spec: BeatSpec; buffer: AudioBuffer }[];
 
   tracks: VocalTrack[];
@@ -35,6 +47,8 @@ interface StudioState {
   setProjectName: (name: string) => void;
   setBeat: (spec: BeatSpec, buffer: AudioBuffer, blobKey: string | null) => void;
   setBeatGain: (gain: number) => void;
+  setBeatEdits: (edits: BeatEdits | null) => void;
+  updateBeatBuffer: (buffer: AudioBuffer) => void;
   clearBeat: () => void;
   restoreRecentBeat: (id: string) => void;
 
@@ -71,6 +85,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   beatBuffer: null,
   beatBlobKey: null,
   beatGain: 0.9,
+  beatEdits: null,
   recentBeats: [],
 
   tracks: [],
@@ -96,6 +111,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
         beatSpec: spec,
         beatBuffer: buffer,
         beatBlobKey: blobKey,
+        beatEdits: null,
         recentBeats,
         masteredBuffer: null,
         masteredMeta: null,
@@ -104,7 +120,11 @@ export const useStudioStore = create<StudioState>((set, get) => ({
 
   setBeatGain: (gain) => set({ beatGain: gain }),
 
-  clearBeat: () => set({ beatSpec: null, beatBuffer: null, beatBlobKey: null }),
+  setBeatEdits: (edits) => set({ beatEdits: edits }),
+
+  updateBeatBuffer: (buffer) => set({ beatBuffer: buffer, masteredBuffer: null, masteredMeta: null }),
+
+  clearBeat: () => set({ beatSpec: null, beatBuffer: null, beatBlobKey: null, beatEdits: null }),
 
   restoreRecentBeat: (id) =>
     set((state) => {
@@ -114,6 +134,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
         beatSpec: found.spec,
         beatBuffer: found.buffer,
         beatBlobKey: null,
+        beatEdits: null,
         masteredBuffer: null,
         masteredMeta: null,
       };
@@ -176,6 +197,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       beatBuffer: null,
       beatBlobKey: null,
       beatGain: 0.9,
+      beatEdits: null,
       tracks: [],
       trackBuffers: {},
       lyrics: [{ id: newId(), text: "" }],
@@ -195,7 +217,8 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       beatSpec: project.beat,
       beatBuffer,
       beatBlobKey: project.beatAudioKey,
-      tracks: project.tracks,
+      beatEdits: project.beatEdits ?? null,
+      tracks: project.tracks.map(normalizeTrack),
       trackBuffers,
       lyrics: project.lyrics.length ? project.lyrics : [{ id: newId(), text: "" }],
       mastering: project.mastering,
@@ -215,6 +238,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       updatedAt: Date.now(),
       beat: state.beatSpec,
       beatAudioKey: state.beatBlobKey,
+      beatEdits: state.beatEdits,
       tracks: state.tracks,
       lyrics: state.lyrics,
       mastering: state.mastering,

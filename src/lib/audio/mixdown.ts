@@ -1,5 +1,6 @@
 import type { BeatSpec, VocalTrack } from "@/lib/types";
 import { applyPitchCorrection } from "./pitchCorrect";
+import { buildVoiceEffectChain, getPlaybackRateForEffect } from "./voiceEffects";
 
 export interface MixTrackInput {
   track: VocalTrack;
@@ -95,6 +96,9 @@ export async function renderMixdown(options: MixdownOptions): Promise<AudioBuffe
 
     const source = ctx.createBufferSource();
     source.buffer = audioBuffer;
+    source.playbackRate.value = getPlaybackRateForEffect(track.voiceEffect);
+
+    const effectChain = buildVoiceEffectChain(ctx, track.voiceEffect);
 
     const gainNode = ctx.createGain();
     gainNode.gain.value = track.gain;
@@ -107,7 +111,8 @@ export async function renderMixdown(options: MixdownOptions): Promise<AudioBuffe
     const sendGain = ctx.createGain();
     sendGain.gain.value = track.reverbSend;
 
-    source.connect(gainNode).connect(panNode);
+    source.connect(effectChain.input);
+    effectChain.output.connect(gainNode).connect(panNode);
     panNode.connect(dryGain).connect(master);
     panNode.connect(sendGain).connect(reverbBus);
 

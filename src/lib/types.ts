@@ -42,6 +42,16 @@ export interface BeatSpec {
   };
 }
 
+export type VoiceEffectId =
+  | "none"
+  | "radio"
+  | "telephone"
+  | "robot"
+  | "hall"
+  | "chorus"
+  | "chipmunk"
+  | "deep";
+
 export interface VocalTrack {
   id: string;
   name: string;
@@ -58,6 +68,10 @@ export interface VocalTrack {
   pitchCorrect: number;
   /** Offset in seconds from the start of the project timeline. */
   offset: number;
+  /** Whether this is a recorded vocal take or a dropped-in soundboard FX one-shot. */
+  kind: "vocal" | "fx";
+  /** Voice effect preset applied on top of pitch correction, mainly meaningful for vocal tracks. */
+  voiceEffect: VoiceEffectId;
 }
 
 export type MasteringPresetId =
@@ -84,6 +98,24 @@ export interface LyricLine {
   text: string;
 }
 
+/** Drum lanes are edited step-by-step; melodic lanes are simple per-section mutes. */
+export type DrumLane = "kick" | "snare" | "hat" | "openHat" | "perc";
+export type MelodicLane = "bass" | "chords" | "hook";
+
+export interface BeatSectionEdit {
+  /** Explicit step list per drum lane, overriding the generated pattern for every bar in this section. */
+  drums?: Partial<Record<DrumLane, number[]>>;
+  /** true = this melodic layer is silenced for this section. */
+  melodicMute?: Partial<Record<MelodicLane, boolean>>;
+}
+
+export interface BeatEdits {
+  /** How many bars make up one editable section. */
+  sectionBars: number;
+  /** Keyed by section index (0-based). Sections with no entry use the generated pattern untouched. */
+  sections: Record<number, BeatSectionEdit>;
+}
+
 export interface StudioProject {
   id: string;
   name: string;
@@ -91,6 +123,7 @@ export interface StudioProject {
   updatedAt: number;
   beat: BeatSpec | null;
   beatAudioKey: string | null; // key into blob store for rendered/uploaded beat audio
+  beatEdits: BeatEdits | null;
   tracks: VocalTrack[];
   lyrics: LyricLine[];
   mastering: MasteringSettings;

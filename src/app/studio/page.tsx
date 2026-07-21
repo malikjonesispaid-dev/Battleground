@@ -7,10 +7,13 @@ import { BeatLibrary } from "@/components/studio/BeatLibrary";
 import { TrackList } from "@/components/studio/TrackList";
 import { LyricsTeleprompter } from "@/components/studio/LyricsTeleprompter";
 import { MasteringPanel } from "@/components/studio/MasteringPanel";
+import { BeatEditor } from "@/components/studio/BeatEditor";
+import { VocalEditorHub } from "@/components/studio/VocalEditorHub";
 import { Button } from "@/components/ui/Button";
 import { Download, X } from "lucide-react";
 import { playbackEngine } from "@/lib/audio/livePlayback";
 import { useCallback } from "react";
+import { MAX_TRACKS } from "@/lib/constants";
 
 export default function StudioPage() {
   const engine = useStudioEngine();
@@ -60,11 +63,14 @@ export default function StudioPage() {
           isPlaying={engine.isPlaying}
           isRecording={engine.isRecording}
           currentTime={engine.currentTime}
+          totalDuration={totalDuration}
           hasContent={!!engine.beatBuffer || engine.tracks.length > 0}
           onTogglePlay={engine.togglePlay}
           onRecord={engine.startRecording}
           onStopRecording={engine.stopRecording}
           onRewind={() => engine.seek(0)}
+          onSeek={engine.seek}
+          atTrackLimit={engine.tracks.length >= MAX_TRACKS}
         />
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -90,6 +96,14 @@ export default function StudioPage() {
           />
         </div>
 
+        <BeatEditor
+          composition={engine.beatComposition}
+          beatEdits={engine.beatEdits}
+          isRendering={engine.isGeneratingBeat}
+          onToggleStep={engine.toggleBeatDrumStep}
+          onSetMelodicMute={engine.setBeatMelodicMute}
+        />
+
         <TrackList
           tracks={engine.tracks}
           trackBuffers={engine.trackBuffers}
@@ -99,6 +113,13 @@ export default function StudioPage() {
           onUpdate={engine.updateTrack}
           onRemove={engine.removeTrack}
           onSelect={engine.setActiveTrackId}
+        />
+
+        <VocalEditorHub
+          tracks={engine.tracks}
+          activeTrackId={engine.activeTrackId}
+          onUpdateTrack={engine.updateTrack}
+          onDropSoundFx={engine.dropSoundFx}
         />
 
         <MasteringPanel

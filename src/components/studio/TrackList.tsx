@@ -4,6 +4,7 @@ import { Panel } from "@/components/ui/Panel";
 import { TrackRow } from "@/components/studio/TrackRow";
 import type { VocalTrack } from "@/lib/types";
 import { Mic } from "lucide-react";
+import { MAX_TRACKS } from "@/lib/constants";
 
 export function TrackList({
   tracks,
@@ -25,11 +26,11 @@ export function TrackList({
   onSelect: (id: string) => void;
 }) {
   return (
-    <Panel title={`Vocal Takes (${tracks.length})`}>
+    <Panel title={`Tracks (${tracks.length}/${MAX_TRACKS})`}>
       {tracks.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-8 text-center text-sm text-neutral-500">
           <Mic size={22} />
-          Hit Record to lay down your first take over the beat.
+          Hit Record to lay down a vocal take, or drop in a sound effect from the Vocal Hub.
         </div>
       ) : (
         <div className="flex flex-col gap-2">

@@ -116,6 +116,7 @@ function scheduleComposition(
   });
 
   chordsPerBar.forEach((chord, barIndex) => {
+    if (chord.notes.length === 0) return;
     const barStart = startOffset + barIndex * barDur;
     const freqs = chord.notes.map((n) => noteToFrequency(n.note, n.octave));
     rack.chords.triggerAttackRelease(freqs, barDur * 0.95, barStart, 0.55);

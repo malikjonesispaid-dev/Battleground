@@ -1,8 +1,9 @@
 "use client";
 
-import { Trash2, Volume2, VolumeX } from "lucide-react";
+import { Trash2, Volume2, VolumeX, Mic2, Sparkles } from "lucide-react";
 import { Waveform } from "@/components/studio/Waveform";
 import type { VocalTrack } from "@/lib/types";
+import { VOICE_EFFECT_LABELS } from "@/lib/audio/voiceEffects";
 
 export function TrackRow({
   track,
@@ -29,12 +30,22 @@ export function TrackRow({
       }`}
     >
       <div className="flex items-center gap-2">
+        {track.kind === "fx" ? (
+          <Sparkles size={13} className="shrink-0 text-amber-400" aria-label="Sound effect" />
+        ) : (
+          <Mic2 size={13} className="shrink-0 text-cyan-400" aria-label="Vocal take" />
+        )}
         <input
           value={track.name}
           onChange={(e) => onUpdate({ name: e.target.value })}
           onClick={(e) => e.stopPropagation()}
           className="min-w-0 flex-1 truncate bg-transparent text-sm font-medium text-neutral-100 outline-none"
         />
+        {track.voiceEffect !== "none" && (
+          <span className="shrink-0 rounded-full bg-fuchsia-500/15 px-2 py-0.5 text-[10px] font-medium text-fuchsia-300">
+            {VOICE_EFFECT_LABELS[track.voiceEffect]}
+          </span>
+        )}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -112,20 +123,22 @@ export function TrackRow({
         </label>
       </div>
 
-      <label className="flex items-center gap-2 text-xs text-neutral-400">
-        <span className="whitespace-nowrap">AI Pitch Assist</span>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={track.pitchCorrect}
-          onClick={(e) => e.stopPropagation()}
-          onChange={(e) => onUpdate({ pitchCorrect: parseFloat(e.target.value) })}
-          className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-neutral-700 accent-emerald-400"
-        />
-        <span className="w-8 tabular-nums text-neutral-300">{Math.round(track.pitchCorrect * 100)}%</span>
-      </label>
+      {track.kind !== "fx" && (
+        <label className="flex items-center gap-2 text-xs text-neutral-400">
+          <span className="whitespace-nowrap">AI Pitch Assist</span>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={track.pitchCorrect}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => onUpdate({ pitchCorrect: parseFloat(e.target.value) })}
+            className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-neutral-700 accent-emerald-400"
+          />
+          <span className="w-8 tabular-nums text-neutral-300">{Math.round(track.pitchCorrect * 100)}%</span>
+        </label>
+      )}
     </div>
   );
 }

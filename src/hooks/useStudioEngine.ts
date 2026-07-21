@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useStudioStore } from "@/store/studioStore";
 import { getAudioContext, decodeAudioFile } from "@/lib/audio/context";
 import { startVocalRecording, type RecorderHandle } from "@/lib/audio/recorder";
@@ -11,8 +11,11 @@ import { audioBufferToWav } from "@/lib/audio/wav";
 import { downloadBlob } from "@/lib/download";
 import { createBeatSpec, composeBeat, type GenerateBeatOptions } from "@/lib/beatgen/generator";
 import { renderBeatToAudioBuffer } from "@/lib/beatgen/player";
-import type { VocalTrack, StudioProject } from "@/lib/types";
+import { applyBeatEdits, toggleDrumStep, setMelodicMute } from "@/lib/beatgen/editing";
+import { getSoundFxBuffer, type SoundFxId } from "@/lib/audio/soundboard";
+import type { DrumLane, MelodicLane, VocalTrack, StudioProject } from "@/lib/types";
 import * as storageDb from "@/lib/storage/db";
+import { MAX_TRACKS } from "@/lib/constants";
 
 function trackBlobKey(projectId: string, trackId: string) {
   return `track:${projectId}:${trackId}`;
@@ -37,6 +40,12 @@ export function useStudioEngine() {
     setError(`${prefix}: ${message}`);
   }, []);
 
+  /** Editable, non-audio representation of the current generated beat (null for uploaded beats). */
+  const beatComposition = useMemo(() => {
+    if (!state.beatSpec || state.beatSpec.sourceAudio) return null;
+    return composeBeat(state.beatSpec);
+  }, [state.beatSpec]);
+
   const play = useCallback(
     (fromTime?: number) => {
       getAudioContext();
@@ -50,6 +59,7 @@ export function useStudioEngine() {
           pan: t.pan,
           muted: t.muted,
           solo: t.solo,
+          voiceEffect: t.voiceEffect,
         }))
         .filter((t) => !!t.buffer);
 
@@ -87,6 +97,10 @@ export function useStudioEngine() {
   );
 
   const startRecording = useCallback(async () => {
+    if (state.tracks.length >= MAX_TRACKS) {
+      setError(`You've hit the ${MAX_TRACKS}-track limit. Delete a track to record a new one.`);
+      return;
+    }
     try {
       getAudioContext();
       const startAt = currentTime;
@@ -101,6 +115,7 @@ export function useStudioEngine() {
           pan: t.pan,
           muted: t.muted,
           solo: t.solo,
+          voiceEffect: t.voiceEffect,
         }))
         .filter((t) => !!t.buffer);
 
@@ -143,6 +158,8 @@ export function useStudioEngine() {
         reverbSend: 0.15,
         pitchCorrect: 0,
         offset: recordingStartPosRef.current,
+        kind: "vocal",
+        voiceEffect: "none",
       };
       state.addTrack(track, buffer);
     } catch (e) {
@@ -215,6 +232,73 @@ export function useStudioEngine() {
       }
     },
     [state, reportError],
+  );
+
+  const rerenderEditedBeat = useCallback(
+    async (edits: ReturnType<typeof toggleDrumStep>) => {
+      if (!beatComposition) return;
+      setIsGeneratingBeat(true);
+      try {
+        const edited = applyBeatEdits(beatComposition, edits);
+        const buffer = await renderBeatToAudioBuffer(edited, 1);
+        state.updateBeatBuffer(buffer);
+      } catch (e) {
+        reportError("Couldn't apply that edit", e);
+      } finally {
+        setIsGeneratingBeat(false);
+      }
+    },
+    [beatComposition, state, reportError],
+  );
+
+  const toggleBeatDrumStep = useCallback(
+    (sectionIndex: number, lane: DrumLane, step: number) => {
+      if (!beatComposition) return;
+      const next = toggleDrumStep(beatComposition, state.beatEdits, sectionIndex, lane, step);
+      state.setBeatEdits(next);
+      void rerenderEditedBeat(next);
+    },
+    [beatComposition, state, rerenderEditedBeat],
+  );
+
+  const setBeatMelodicMute = useCallback(
+    (sectionIndex: number, lane: MelodicLane, muted: boolean) => {
+      const next = setMelodicMute(state.beatEdits, sectionIndex, lane, muted);
+      state.setBeatEdits(next);
+      void rerenderEditedBeat(next);
+    },
+    [state, rerenderEditedBeat],
+  );
+
+  const dropSoundFx = useCallback(
+    async (fxId: SoundFxId, label: string) => {
+      if (state.tracks.length >= MAX_TRACKS) {
+        setError(`You've hit the ${MAX_TRACKS}-track limit. Delete a track to drop in another sound.`);
+        return;
+      }
+      try {
+        const buffer = await getSoundFxBuffer(fxId);
+        const track: VocalTrack = {
+          id: crypto.randomUUID(),
+          name: label,
+          createdAt: Date.now(),
+          duration: buffer.duration,
+          gain: 1,
+          pan: 0,
+          muted: false,
+          solo: false,
+          reverbSend: 0,
+          pitchCorrect: 0,
+          offset: currentTime,
+          kind: "fx",
+          voiceEffect: "none",
+        };
+        state.addTrack(track, buffer);
+      } catch (e) {
+        reportError("Couldn't drop in that sound", e);
+      }
+    },
+    [state, currentTime, reportError],
   );
 
   const runMastering = useCallback(async () => {
@@ -313,7 +397,8 @@ export function useStudioEngine() {
             if (blob) beatBuffer = await decodeAudioFile(blob);
           } else {
             const composition = composeBeat(project.beat);
-            beatBuffer = await renderBeatToAudioBuffer(composition, 1);
+            const edited = applyBeatEdits(composition, project.beatEdits);
+            beatBuffer = await renderBeatToAudioBuffer(edited, 1);
           }
         }
 
@@ -381,6 +466,10 @@ export function useStudioEngine() {
     generateBeat,
     regenerateBeat,
     uploadBeat,
+    beatComposition,
+    toggleBeatDrumStep,
+    setBeatMelodicMute,
+    dropSoundFx,
     runMastering,
     exportMastered,
     exportRawMix,
